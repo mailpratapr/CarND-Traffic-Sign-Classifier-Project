@@ -132,23 +132,29 @@ plt.show()
 plt.figure()
 hist_train = np.histogram(y_train,n_classes)
 plt.plot(np.arange(0,n_classes,1),hist_train[0])
+plt.xlabel("Class number")
+plt.ylabel("Number of images")
 plt.figure()
 hist_valid = np.histogram(y_valid,n_classes)
 plt.plot(np.arange(0,n_classes,1),hist_valid[0])
+plt.xlabel("Class number")
+plt.ylabel("Number of images")
 plt.figure()
 hist_test = np.histogram(y_test,n_classes)
 plt.plot(np.arange(0,n_classes,1),hist_test[0])
+plt.xlabel("Class number")
+plt.ylabel("Number of images")
 
 print("Min number of images per class =", min(num_of_samples))
 print("Max number of images per class =", max(num_of_samples))
 ```
 
 
-![png](output_8_0.png)
+![png](output/output_8_0.png)
 
 
 
-![png](output_8_1.png)
+![png](output/output_8_1.png)
 
 
     Min number of images per class = 180
@@ -156,15 +162,15 @@ print("Max number of images per class =", max(num_of_samples))
 
 
 
-![png](output_8_3.png)
+![png](output/output_8_3.png)
 
 
 
-![png](output_8_4.png)
+![png](output/output_8_4.png)
 
 
 
-![png](output_8_5.png)
+![png](output/output_8_5.png)
 
 
 ----
@@ -190,10 +196,11 @@ Here is an example of a [published baseline model on this problem](http://yann.l
 
 Minimally, the image data should be normalized so that the data has mean zero and equal variance. For image data, `(pixel - 128)/ 128` is a quick way to approximately normalize the data and can be used in this project. 
 
-Other pre-processing steps are optional. You can try different techniques to see if it improves performance.
-Converting to grayscale will destroy the data so, the data will be processed in RGB format
+1. Converting to grayscale - It also helps to reduce training time, which was nice when a GPU wasn't available. But that doesn't seem to be an efficient approach becase the traffic signs have a lot of color information which could be useful in classifying them. So I decided to use the same image with just normalization.
 
-Use the code cell (or multiple code cells, if necessary) to implement the first step of your project.
+2. Normalizing the data to the range (-1,1) - This was done using the line of code X_train_normalized = (X_train - 128)/128. The resulting dataset mean wasn't exactly zero, but it was reduced from around 82 to roughly -0.35. 
+
+I chose to do this mostly because it was fairly easy to do. How it helps is a bit nebulous to me, the gist of which is that having a wider distribution in the data would make it more difficult to train using a singlar learning rate. Different features could encompass far different ranges and a single learning rate might make some weights diverge.
 
 
 ```python
@@ -211,11 +218,31 @@ EPOCHS = 100
 BATCH_SIZE = 256
 ```
 
-### Model Architecture
+# CNN Architecture
 
-The architecture is LeNet from the lab, with the input layer modified to accept color images(depth 3), and the final layer to output 43 classes.
+| Layer | Input | Output  | Description | Filter Size |
+|-------|-------|---------|-------------|--------------|
+| CNN-1 | 32x32x3 | 30x30x32  | RGB Image, input image with stride 1 and valid padding |
+| CNN-2 | 30x30x32 | 28x28x32  | CNN with stride 1 and valid padding |
+| Pooling | 28x28x32 | 14x14x32  | 2x2 max pool |
+| CNN-3 | 14x14x32 | 12x12x64  | CNN with stride 1 and valid padding |
+| CNN-4 | 12x12x64 | 10x10x64  | CNN with stride 1 and valid padding |
+| Pooling | 10x10x64 | 5x5x64  | 2x2 max pool |
+| CNN-4 | 5x5x64 | 3x3x128  | CNN with stride 1 and valid padding |
+| Flatten | 3x3x128 | 1152  | Flatten the layer |
+| FC-1 | 1152 | 1024  | Fully connected Layer |
+| ReLU | 1024 | 1024  | Activation |
+| DO | 1024 | 1024  | DropOut |
+| FC-2 | 1024 | 1024  | Fully connected Layer |
+| ReLU | 1024 | 1024  | Activation |
+| DO | 1024 | 1024  | DropOut |
+| FC-3 | 1024 | 43  | Fully connected Layer |
 
-Dropout layer is used which gives me a knob to turn if I suspect the network is overfitting.
+I started with the LeNet example. That model seems to work well with hand written code recognition and it is proven to be one of the best. Current dataset isn't as easy as MNIST Data, it has complex information and the data is noisy and blurry too. With the LeNet model I could not be able to get the accuracy that I was expecting. So I modied the CNNs to be deeper to improve the results.
+
+That doesn't seem to give me more than 60% accuracy in first 50 epochs. So I started modyfing the Fully connected layers to see if the result changes. Looks like that made a huge impact in the model. I got around 90% accuracy. From the references I see that dropout layers could be something that could make the model more reliable. Which apparently improved the accuracy to around 93%.
+
+Then by adjusting the batch size and learning rate, I could be able to achieve 96-97% accuracy.
 
 
 ```python
@@ -721,23 +748,23 @@ for i in range(0,5):
 
 
 
-![png](output_23_1.png)
+![png](output/output_22_1.png)
 
 
 
-![png](output_23_2.png)
+![png](output/output_22_2.png)
 
 
 
-![png](output_23_3.png)
+![png](output/output_22_3.png)
 
 
 
-![png](output_23_4.png)
+![png](output/output_22_4.png)
 
 
 
-![png](output_23_5.png)
+![png](output/output_22_5.png)
 
 
 
@@ -786,24 +813,26 @@ for name,i in zip(names,range(0,5)):
 
 
 
-![png](output_24_1.png)
+![png](output/output_23_1.png)
 
 
 
-![png](output_24_2.png)
+![png](output/output_23_2.png)
 
 
 
-![png](output_24_3.png)
+![png](output/output_23_3.png)
 
 
 
-![png](output_24_4.png)
+![png](output/output_23_4.png)
 
 
 
-![png](output_24_5.png)
+![png](output/output_23_5.png)
 
+
+The images used for testing appears to be more easily distinguishable than quite a few images from the original dataset. And the images tend to be quite a bit brighter and might occupy a different range in the color space, possibly a range that the model was not trained on. In addition, the German Traffic signs dataset contain a border of 10 % around the actual traffic sign (at least 5 pixels) to allow for edge-based approaches. 
 
 # Predict the Sign Type for Each Image
 
@@ -846,6 +875,8 @@ print(output)
     Actual:
     [24  9 36 25 28]
 
+
+The test image 1 is a clear image, high contrast. This will make sure that the model is performing well or not on new data which the model had never seen. This will help in understanding the performance of the model. The accuracy of the model should not get affected by the brightness and contrast. But looks like it does on some data like computer generated images.
 
 # Accuracy
 
@@ -970,23 +1001,23 @@ for i in range(5):
 
 
 
-![png](output_31_1.png)
+![png](output/output_32_1.png)
 
 
 
-![png](output_31_2.png)
+![png](output/output_32_2.png)
 
 
 
-![png](output_31_3.png)
+![png](output/output_32_3.png)
 
 
 
-![png](output_31_4.png)
+![png](output/output_32_4.png)
 
 
 
-![png](output_31_5.png)
+![png](output/output_32_5.png)
 
 
 ### Project Writeup
